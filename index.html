@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vino v1.6</title>
+<title>Vino v1.7</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -63,10 +63,10 @@ button{font-family:inherit;}
   width:20px;height:20px;color:var(--text-faint);display:none;}
 
 /* Pills row (weinart multiselect) */
-.pillrow{display:flex;gap:6px;padding:10px 14px 4px;flex-shrink:0;flex-wrap:nowrap;}
-.pill{flex:1 1 0;min-width:0;padding:6px 4px;border-radius:999px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text-dim);font-size:11px;line-height:1.15;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.pillrow{display:flex;gap:4px;padding:10px 14px 4px;flex-shrink:0;flex-wrap:nowrap;justify-content:space-between;}
+.pill{flex:0 1 auto;min-width:0;padding:5px 4px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-dim);font-size:10px;line-height:1.15;
+  white-space:nowrap;text-align:center;}
 .pill.active{background:var(--accent);border-color:var(--accent);color:#1F1E1D;font-weight:600;}
 
 /* Dropdown multiselect (Rebsorte filter) */
@@ -446,7 +446,7 @@ const REBSORTEN = ["Cabernet Sauvignon","Chardonnay","Dornfelder","Gewürztramin
   "Grüner Veltliner","Malbec","Merlot","Müller-Thurgau","Nebbiolo","Pinot Noir","Riesling",
   "Sangiovese","Sauvignon Blanc","Silvaner","Syrah/Shiraz","Tempranillo","Trollinger",
   "Weißburgunder","Zinfandel"];
-const WEINARTEN = ["Rot","Weiß","Rose","Schaumwein","Dessertwein","Orange Wine"];
+const WEINARTEN = ["Rot","Weiß","Rose","Schaumwein","Dessertwein","Orange"];
 const AUSBAU_OPTIONEN = ["Edelstahltank","Barrique (neu)","Barrique (gebraucht)","Holzfass (groß)",
   "Beton-Ei","Amphore/Ton","Kunststofftank","Unbekannt"];
 const GAERUNG_OPTIONEN = ["Stahltank","Fass","Steinkrug","Flaschengärung"];
@@ -459,7 +459,7 @@ const AROMA_KATEGORIEN = {
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
-const APP_VERSION = "v1.6";
+const APP_VERSION = "v1.7";
 const MAX_PHOTO_DIM = 900;
 
 let db = null;
