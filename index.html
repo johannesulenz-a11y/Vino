@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vino v1.3</title>
+<title>Vino v1.5</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Vino">
 <meta name="theme-color" content="#1F1E1D">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192-v2.png">
+<link rel="icon" href="icon-192-v2.png">
 <style>
 :root{
   --bg:#1F1E1D;
@@ -115,8 +115,9 @@ button{font-family:inherit;}
 .row-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
 .row-name{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .row-sub{font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:34%;flex-shrink:0;}
-.row-rating{flex-shrink:0;font-size:12px;color:var(--star);white-space:nowrap;}
+  width:34%;max-width:34%;flex-shrink:0;text-align:right;}
+.row-rating{flex-shrink:0;width:70px;font-size:12px;color:var(--star);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;text-align:right;}
 .row-fav-ic{width:15px;height:15px;color:var(--star);flex-shrink:0;}
 .empty-state{text-align:center;color:var(--text-faint);padding:60px 20px;font-size:14px;}
 
@@ -234,13 +235,14 @@ button{font-family:inherit;}
 .history-empty{color:var(--text-faint);font-size:13.5px;padding:8px 0;}
 
 .detail-footer{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
-  background:var(--bg);border-top:1px solid var(--border);display:flex;gap:10px;z-index:101;
+  background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:center;z-index:101;
   opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;}
 .detail-footer.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
 .btn{flex:1;padding:13px;border-radius:var(--radius-sm);border:none;font-size:15px;font-weight:700;}
 .btn-primary{background:var(--accent);color:#1F1E1D;}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-danger{background:none;color:var(--danger);border:1px solid var(--danger);}
+.detail-footer .btn-danger{flex:none;width:auto;padding:8px 22px;font-size:13px;border-radius:999px;}
 
 /* Keep read-only fields visually identical to editable ones */
 .field-input:disabled,.field-select:disabled,.field-textarea:disabled,
@@ -457,7 +459,7 @@ const AROMA_KATEGORIEN = {
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
-const APP_VERSION = "v1.3";
+const APP_VERSION = "v1.5";
 const MAX_PHOTO_DIM = 900;
 
 let db = null;
@@ -572,10 +574,13 @@ function showToast(msg){
   showToast._tm = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 let confirmCb = null;
-function showConfirm(title, text, cb){
+function showConfirm(title, text, cb, confirmLabel, confirmClass){
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-text').textContent = text;
   confirmCb = cb;
+  const okBtn = document.getElementById('confirm-ok');
+  okBtn.textContent = confirmLabel || 'Löschen';
+  okBtn.className = 'btn ' + (confirmClass || 'btn-danger');
   document.getElementById('sheet-overlay').classList.add('open');
   document.getElementById('confirm-sheet').classList.add('open');
 }
@@ -753,7 +758,7 @@ function renderWeinliste(){
         '<span class="row-name">'+esc(w.name||'(ohne Namen)')+'</span>'+
         '<span class="row-sub">'+esc(w.hauptrebsorte||'')+'</span>'+
       '</div>'+
-      '<span class="row-rating">'+ratingStars(w.bewertung)+'</span>'+
+      '<span class="row-rating">'+(w.bewertung ? w.bewertung : '–')+'</span>'+
     '</div>';
   }).join('');
   list.querySelectorAll('.list-row').forEach(row=>{
@@ -982,6 +987,7 @@ function openDetail(id){
   document.getElementById('detail-title').textContent = w.name || 'Wein';
   document.getElementById('detail-scroll').scrollTop = 0;
   updateDeleteFooterVisibility();
+  history.pushState({view:'detail'}, '');
 }
 function openNewWein(){
   editingWein = blankWein();
@@ -994,6 +1000,7 @@ function openNewWein(){
   document.getElementById('detail-title').textContent = 'Neuer Wein';
   document.getElementById('detail-scroll').scrollTop = 0;
   updateDeleteFooterVisibility();
+  history.pushState({view:'detail'}, '');
 }
 function updateDeleteFooterVisibility(){
   const scroll = document.getElementById('detail-scroll');
@@ -1012,6 +1019,13 @@ async function closeDetail(){
   editingWein = null;
 }
 document.getElementById('detail-back').onclick = closeDetail;
+
+/* Hardware/gesture back button closes the detail page instead of exiting the app (see Teadrunk) */
+window.addEventListener('popstate', async ()=>{
+  if(document.getElementById('detail-page').classList.contains('active')){
+    await closeDetail();
+  }
+});
 
 /* Quick actions (Favorit, Bestand) persist immediately, independent of edit mode */
 async function quickPersist(){
@@ -1517,7 +1531,7 @@ document.getElementById('file-import').addEventListener('change', (e)=>{
         await loadAll();
         renderAll();
         showToast('Import abgeschlossen.');
-      });
+      }, 'Importieren', 'btn-primary');
     }catch(err){
       showToast('Fehler beim Import: '+err.message);
     }
