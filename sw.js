@@ -1,5 +1,5 @@
-const CACHE_NAME = "vino-v1.5";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192-v2.png", "./icon-512-v2.png"];
+const CACHE_NAME = "vino-v1.6";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
