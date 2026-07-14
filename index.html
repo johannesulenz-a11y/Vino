@@ -58,10 +58,10 @@ button{font-family:inherit;}
   width:20px;height:20px;color:var(--text-faint);display:none;}
 
 /* Pills row (weinart multiselect) */
-.pillrow{display:flex;gap:8px;overflow-x:auto;padding:10px 14px 4px;flex-shrink:0;}
-.pillrow::-webkit-scrollbar{display:none;}
-.pill{flex-shrink:0;padding:6px 14px;border-radius:999px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text-dim);font-size:13px;white-space:nowrap;}
+.pillrow{display:flex;gap:6px;padding:10px 14px 4px;flex-shrink:0;flex-wrap:nowrap;}
+.pill{flex:1 1 0;min-width:0;padding:6px 4px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-dim);font-size:11.5px;line-height:1.15;
+  white-space:normal;overflow-wrap:break-word;text-align:center;}
 .pill.active{background:var(--accent);border-color:var(--accent);color:#1F1E1D;font-weight:600;}
 
 /* Dropdown multiselect (Rebsorte filter) */
@@ -79,9 +79,19 @@ button{font-family:inherit;}
   border-bottom:1px solid var(--border);}
 .dropdown-item:last-child{border-bottom:none;}
 .dropdown-item input{width:16px;height:16px;accent-color:var(--accent);}
+.dropdown-group-title{padding:8px 12px 4px;font-size:11px;font-weight:700;color:var(--text-faint);
+  text-transform:uppercase;letter-spacing:0.4px;background:var(--surface);}
 
 /* List */
-.list-scroll{flex:1;overflow-y:auto;padding:6px 0 90px;-webkit-overflow-scrolling:touch;}
+.list-scroll{flex:1;overflow-y:auto;padding:0 0 90px;-webkit-overflow-scrolling:touch;}
+.list-header{display:flex;align-items:center;gap:10px;padding:8px 14px;position:sticky;top:0;
+  background:var(--bg);z-index:5;border-bottom:1px solid var(--border);}
+.list-header span{font-size:10.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+.lh-thumb{width:42px;flex-shrink:0;}
+.lh-main{flex:1;min-width:0;}
+.lh-sub{flex-shrink:0;text-align:right;}
+.lh-sub.wide{max-width:34%;width:34%;}
+.lh-rating{flex-shrink:0;width:70px;text-align:right;}
 .list-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
 .list-row:active{background:var(--surface);}
 .row-thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;background:var(--surface2);
@@ -148,6 +158,21 @@ button{font-family:inherit;}
 .section-title{padding:16px 16px 8px;font-size:15px;font-weight:700;color:var(--accent);
   border-top:1px solid var(--border);margin-top:6px;}
 
+/* Read-only view mode */
+.view-name{padding:14px 16px 6px;font-size:20px;font-weight:700;}
+.view-grid{padding:0 16px;}
+.view-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);}
+.view-row:last-child{border-bottom:none;}
+.view-label{font-size:12.5px;color:var(--text-dim);flex-shrink:0;}
+.view-value{font-size:14px;text-align:right;font-weight:600;}
+.view-value.empty{color:var(--text-faint);font-weight:400;}
+.view-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 14px;}
+.view-chip{background:var(--surface2);border:1px solid var(--border);border-radius:999px;
+  padding:5px 12px;font-size:13px;color:var(--text-dim);}
+.view-bemerkung{padding:0 16px 14px;font-size:14.5px;line-height:1.5;color:var(--text);}
+.view-bemerkung.empty{color:var(--text-faint);font-style:italic;}
+.view-hint{text-align:center;color:var(--text-faint);font-size:12.5px;padding:14px 16px 4px;}
+
 .chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
 .chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);
   border-radius:999px;padding:5px 10px 5px 12px;font-size:13px;}
@@ -155,6 +180,10 @@ button{font-family:inherit;}
 .chip button svg{width:13px;height:13px;}
 
 .aroma-select{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px;margin-bottom:14px;}
+.aroma-group{width:100%;margin-bottom:2px;}
+.aroma-group-title{width:100%;font-size:11.5px;font-weight:700;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:0.4px;margin:10px 0 2px;}
+.aroma-group-title:first-child{margin-top:0;}
 .aroma-tag{padding:7px 13px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
   color:var(--text-dim);font-size:13px;}
 .aroma-tag.active{background:var(--accent);border-color:var(--accent);color:#1F1E1D;font-weight:600;}
@@ -254,7 +283,15 @@ select.field-select{appearance:none;-webkit-appearance:none;
       <div class="dropdown-panel" id="rebsorte-filter-panel"></div>
     </div>
     <div class="pillrow" id="weinart-pillrow"></div>
-    <div class="list-scroll" id="weinliste-scroll"><div id="weinliste-list"></div></div>
+    <div class="list-scroll" id="weinliste-scroll">
+      <div class="list-header">
+        <span class="lh-thumb">Bild</span>
+        <span class="lh-main">Name</span>
+        <span class="lh-sub wide">Rebsorte</span>
+        <span class="lh-rating">Bewertung</span>
+      </div>
+      <div id="weinliste-list"></div>
+    </div>
     <button class="fab" id="fab-add-wein"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
 
@@ -270,12 +307,27 @@ select.field-select{appearance:none;-webkit-appearance:none;
       <div class="dropdown-panel" id="aroma-filter-panel"></div>
     </div>
     <div class="pillrow" id="aromen-weinart-pillrow"></div>
-    <div class="list-scroll" id="aromen-scroll"><div id="aromen-list"></div></div>
+    <div class="list-scroll" id="aromen-scroll">
+      <div class="list-header">
+        <span class="lh-thumb">Bild</span>
+        <span class="lh-main">Name</span>
+        <span class="lh-sub wide">Aromen</span>
+      </div>
+      <div id="aromen-list"></div>
+    </div>
   </div>
 
   <div id="page-favoriten" class="page">
     <div class="topbar"><h1>Favoriten</h1></div>
-    <div class="list-scroll" id="favoriten-scroll"><div id="favoriten-list"></div></div>
+    <div class="list-scroll" id="favoriten-scroll">
+      <div class="list-header">
+        <span class="lh-thumb">Bild</span>
+        <span class="lh-main">Name</span>
+        <span class="lh-sub wide">Weinart</span>
+        <span class="lh-rating">Rebsorte</span>
+      </div>
+      <div id="favoriten-list"></div>
+    </div>
   </div>
 
   <div id="page-statistik" class="page">
@@ -309,11 +361,14 @@ select.field-select{appearance:none;-webkit-appearance:none;
       <button class="icon-btn" id="detail-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
       <h2 id="detail-title">Wein</h2>
       <button class="icon-btn" id="detail-fav-toggle"><svg viewBox="0 0 24 24" id="detail-fav-icon" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.4-10-9.3C.3 8.4 2 4.5 5.7 4c2-.3 3.9.7 4.9 2.2C11.6 4.7 13.5 3.7 15.5 4c3.7.5 5.4 4.4 3.7 7.7C16.3 16.6 12 21 12 21z"/></svg></button>
+      <button class="icon-btn" id="detail-edit-toggle">
+        <svg viewBox="0 0 24 24" id="detail-edit-icon-pencil" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <svg viewBox="0 0 24 24" id="detail-edit-icon-save" style="display:none;" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      </button>
     </div>
     <div class="detail-scroll" id="detail-scroll"></div>
     <div class="detail-footer">
       <button class="btn btn-danger" id="detail-delete">Löschen</button>
-      <button class="btn btn-primary" id="detail-save">Speichern</button>
     </div>
   </div>
 
@@ -358,8 +413,12 @@ const WEINARTEN = ["Rot","Weiß","Rose","Schaumwein","Dessertwein","Orange Wine"
 const AUSBAU_OPTIONEN = ["Edelstahltank","Barrique (neu)","Barrique (gebraucht)","Holzfass (groß)",
   "Beton-Ei","Amphore/Ton","Kunststofftank","Unbekannt"];
 const GAERUNG_OPTIONEN = ["Stahltank","Fass","Steinkrug","Flaschengärung"];
-const DEFAULT_AROMEN = ["Beerig","Zitrus","Vanille","Schokolade","Pfeffer","Kräuter","Honig",
-  "Rauch","Tabak","Leder","Mineralisch","Blumig"];
+const AROMA_KATEGORIEN = {
+  "Früchte": ["Zitrone","Limette","Grüner Apfel","Birne","Pfirsich","Aprikose","Ananas","Maracuja","Erdbeere","Himbeere","Kirsche","Brombeere"],
+  "Blüten & Kräuter": ["Holunderblüte","Veilchen","Rose","Kamille","Minze","Thymian","Salbei","Gras"],
+  "Gewürze & Holz": ["Vanille","Schwarzer Pfeffer","Zimt","Nelke","Muskat","Zedernholz"],
+  "Reifung & Sonstiges": ["Honig","Butter","Haselnuss","Rauch"]
+};
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
@@ -433,11 +492,25 @@ async function loadAll(){
 }
 
 function allAromen(){
-  const set = new Set([...DEFAULT_AROMEN, ...customAromen]);
+  const base = Object.values(AROMA_KATEGORIEN).flat();
+  const set = new Set([...base, ...customAromen]);
   return Array.from(set);
 }
+/* Returns [{kategorie, aromen:[...]}] including a trailing "Eigene" group for custom aromas */
+function allAromaGroups(){
+  const groups = Object.entries(AROMA_KATEGORIEN).map(([kategorie, aromen])=>({kategorie, aromen}));
+  if(customAromen.length){
+    groups.push({kategorie:'Eigene', aromen: customAromen.slice()});
+  }
+  return groups;
+}
 function allRebsorten(){
-  const set = new Set([...REBSORTEN, ...customRebsorten]);
+  const set = new Set(REBSORTEN);
+  customRebsorten.forEach(r=>set.add(r));
+  weine.forEach(w=>{
+    if(w.hauptrebsorte) set.add(w.hauptrebsorte);
+    (w.weitereRebsorten||[]).forEach(r=>set.add(r));
+  });
   return Array.from(set).sort((a,b)=>a.localeCompare(b,'de'));
 }
 
@@ -605,9 +678,12 @@ function renderWeinliste(){
 ============================================================ */
 function renderAromaDropdown(){
   const panel = document.getElementById('aroma-filter-panel');
-  const opts = allAromen();
-  panel.innerHTML = opts.map(a=>
-    '<label class="dropdown-item"><input type="checkbox" data-a="'+esc(a)+'" '+(arFilter.aromen.has(a)?'checked':'')+'><span>'+esc(a)+'</span></label>'
+  const groups = allAromaGroups();
+  panel.innerHTML = groups.map(g=>
+    '<div class="dropdown-group-title">'+esc(g.kategorie)+'</div>' +
+    g.aromen.map(a=>
+      '<label class="dropdown-item"><input type="checkbox" data-a="'+esc(a)+'" '+(arFilter.aromen.has(a)?'checked':'')+'><span>'+esc(a)+'</span></label>'
+    ).join('')
   ).join('');
   panel.querySelectorAll('input').forEach(cb=>{
     cb.onchange = ()=>{
@@ -769,6 +845,8 @@ function renderAll(){
   renderAromenTab();
   renderFavoriten();
   renderStatistik();
+  renderRebsorteDropdown();
+  renderAromaDropdown();
   updateRebsorteCount();
   updateAromaCount();
 }
@@ -778,6 +856,7 @@ function renderAll(){
 ============================================================ */
 let editingWein = null; // working copy
 let editingIsNew = false;
+let detailMode = 'view'; // 'view' | 'edit'
 
 function blankWein(){
   return {
@@ -790,41 +869,208 @@ function blankWein(){
   };
 }
 
+function updateEditToggleIcon(){
+  document.getElementById('detail-edit-icon-pencil').style.display = detailMode==='edit' ? 'none' : '';
+  document.getElementById('detail-edit-icon-save').style.display = detailMode==='edit' ? '' : 'none';
+}
+
 function openDetail(id){
   const w = weine.find(x=>x.id===id);
   editingWein = JSON.parse(JSON.stringify(w));
   editingIsNew = false;
-  renderDetailForm();
+  detailMode = 'view';
+  renderDetailView();
+  updateFavIcon();
+  updateEditToggleIcon();
   document.getElementById('detail-title').textContent = w.name || 'Wein';
   document.getElementById('detail-page').classList.add('active');
 }
 function openNewWein(){
   editingWein = blankWein();
   editingIsNew = true;
+  detailMode = 'edit';
   renderDetailForm();
+  updateFavIcon();
+  updateEditToggleIcon();
   document.getElementById('detail-title').textContent = 'Neuer Wein';
   document.getElementById('detail-page').classList.add('active');
 }
-function closeDetail(){
+async function closeDetail(){
+  if(detailMode==='edit'){
+    await saveEditingWein();
+  }
   document.getElementById('detail-page').classList.remove('active');
   editingWein = null;
 }
 document.getElementById('detail-back').onclick = closeDetail;
+
+/* Quick actions (Favorit, Bestand) persist immediately, independent of edit mode */
+async function quickPersist(){
+  if(!editingWein || !editingWein.id) return;
+  await dbPut('weine', JSON.parse(JSON.stringify(editingWein)));
+  await loadAll();
+  renderAll();
+}
+
+/* Full save of the edit form; used when leaving edit mode or navigating back while editing */
+async function saveEditingWein(){
+  const w = editingWein;
+  syncFormToEditingWein();
+  if(!w.name || !w.name.trim()){ showToast('Bitte einen Namen eingeben.'); return false; }
+  if(w.hauptrebsorte && !allRebsorten().includes(w.hauptrebsorte)){
+    customRebsorten.push(w.hauptrebsorte);
+    await metaSet('customRebsorten', customRebsorten);
+    renderRebsorteDropdown();
+  }
+  const wasNew = editingIsNew;
+  const toSave = Object.assign({}, w);
+  if(wasNew) delete toSave.id;
+  const newId = await dbPut('weine', toSave);
+  if(wasNew){ editingWein.id = newId; editingIsNew = false; }
+  await loadAll();
+  renderAll();
+  showToast(wasNew ? 'Wein hinzugefügt.' : 'Wein gespeichert.');
+  return true;
+}
 
 function updateFavIcon(){
   const icon = document.getElementById('detail-fav-icon');
   icon.setAttribute('fill', editingWein.favorit ? 'currentColor' : 'none');
   icon.parentElement.style.color = editingWein.favorit ? 'var(--star)' : 'var(--text-dim)';
 }
-document.getElementById('detail-fav-toggle').onclick = ()=>{
+document.getElementById('detail-fav-toggle').onclick = async ()=>{
   editingWein.favorit = !editingWein.favorit;
   updateFavIcon();
+  await quickPersist();
 };
+
+document.getElementById('detail-edit-toggle').onclick = async ()=>{
+  if(detailMode==='view'){
+    detailMode = 'edit';
+    renderDetailForm();
+    updateEditToggleIcon();
+  } else {
+    const ok = await saveEditingWein();
+    if(ok){
+      detailMode = 'view';
+      renderDetailView();
+      updateEditToggleIcon();
+      document.getElementById('detail-title').textContent = editingWein.name || 'Wein';
+    }
+  }
+};
+
+/* Bestand +/- buttons: shared between view and edit templates, always persist immediately */
+function wireBestandButtons(){
+  document.getElementById('bestand-getrunken').onclick = async ()=>{
+    if(detailMode==='edit') syncFormToEditingWein();
+    if((editingWein.bestand||0)<=0){ showToast('Kein Bestand mehr vorhanden.'); return; }
+    editingWein.bestand -= 1;
+    editingWein.historie = editingWein.historie || [];
+    editingWein.historie.push({datum: todayISO(), ereignis:'Getrunken'});
+    await quickPersist();
+    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+  };
+  document.getElementById('bestand-verschenkt').onclick = async ()=>{
+    if(detailMode==='edit') syncFormToEditingWein();
+    if((editingWein.bestand||0)<=0){ showToast('Kein Bestand mehr vorhanden.'); return; }
+    editingWein.bestand -= 1;
+    editingWein.historie = editingWein.historie || [];
+    editingWein.historie.push({datum: todayISO(), ereignis:'Verschenkt'});
+    await quickPersist();
+    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+  };
+  document.getElementById('bestand-gekauft').onclick = async ()=>{
+    if(detailMode==='edit') syncFormToEditingWein();
+    editingWein.bestand = (editingWein.bestand||0) + 1;
+    editingWein.historie = editingWein.historie || [];
+    editingWein.historie.push({datum: todayISO(), ereignis:'Gekauft'});
+    await quickPersist();
+    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+  };
+}
 
 function optionsHtml(list, selected){
   return '<option value="">–</option>' + list.map(o=>
     '<option value="'+esc(o)+'" '+(o===selected?'selected':'')+'>'+esc(o)+'</option>'
   ).join('');
+}
+
+/* ============================================================
+   READ-ONLY VIEW MODE
+============================================================ */
+function viewRow(label, value){
+  const hasVal = value !== null && value !== undefined && String(value).trim() !== '';
+  return '<div class="view-row"><span class="view-label">'+esc(label)+'</span>'+
+    '<span class="view-value'+(hasVal?'':' empty')+'">'+(hasVal?esc(value):'–')+'</span></div>';
+}
+
+function renderDetailView(){
+  const w = editingWein;
+  updateFavIcon();
+  const scroll = document.getElementById('detail-scroll');
+
+  const galleryHtml = (w.images && w.images.length) ?
+    '<div class="gallery">' + w.images.map(img=>'<div class="gallery-item"><img src="'+img.data+'"></div>').join('') + '</div>'
+    : '';
+
+  const weitereTxt = (w.weitereRebsorten||[]).length ? (w.weitereRebsorten||[]).join(', ') : '';
+
+  const aromenHtml = (w.aromen||[]).length ?
+    '<div class="view-chips">' + (w.aromen||[]).map(a=>'<span class="view-chip">'+esc(a)+'</span>').join('') + '</div>'
+    : '<div class="view-bemerkung empty">Keine Aromen erfasst.</div>';
+
+  const historieHtml = (w.historie && w.historie.length) ?
+    '<div class="history-list">' + w.historie.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).map(h=>
+      '<div class="history-item"><span class="history-date">'+fmtDate(h.datum)+'</span><span class="history-event">'+esc(h.ereignis)+'</span></div>'
+    ).join('') + '</div>'
+    : '<div class="history-list"><div class="history-empty">Noch keine Einträge.</div></div>';
+
+  scroll.innerHTML =
+    galleryHtml +
+    '<div class="view-name">'+esc(w.name||'(ohne Namen)')+'</div>' +
+    '<div class="view-grid">' +
+      viewRow('Weingut', w.weingut) +
+      viewRow('Jahrgang', w.jahrgang) +
+      viewRow('Land', w.land) +
+      viewRow('Region', w.region) +
+      viewRow('Appellation', w.appellation) +
+      viewRow('Weinart', w.weinart) +
+      viewRow('Hauptrebsorte', w.hauptrebsorte) +
+      viewRow('Weitere Rebsorten', weitereTxt) +
+      viewRow('Alkoholgehalt', w.alkohol ? w.alkohol+' %' : '') +
+      viewRow('Restzucker', w.restzucker ? w.restzucker+' g/L' : '') +
+      viewRow('Ausbau', w.ausbau) +
+      viewRow('Gärung', w.gaerung) +
+      viewRow('Kaufpreis', w.kaufpreis ? Number(w.kaufpreis).toFixed(2)+' €' : '') +
+      viewRow('Kaufdatum', w.kaufdatum ? fmtDate(w.kaufdatum) : '') +
+      viewRow('Verkostungsdatum', w.verkostungsdatum ? fmtDate(w.verkostungsdatum) : '') +
+    '</div>' +
+
+    '<div class="section-title">Bewertung</div>' +
+    '<div class="stars-picker">' + [1,2,3,4,5].map(n=>'<span>'+starIcon(n<=(w.bewertung||0))+'</span>').join('') + '</div>' +
+
+    '<div class="section-title">Aromen</div>' +
+    aromenHtml +
+
+    '<div class="section-title">Bemerkung</div>' +
+    '<div class="view-bemerkung'+(w.bemerkung?'':' empty')+'">'+(w.bemerkung?esc(w.bemerkung):'Keine Bemerkung.')+'</div>' +
+
+    '<div class="section-title">Bestand</div>' +
+    '<div class="bestand-box">' +
+      '<div class="bestand-count" id="bestand-count">'+(w.bestand||0)+'</div>' +
+      '<div class="bestand-btns">' +
+        '<button type="button" class="bestand-btn minus" id="bestand-getrunken">− 1<br>Getrunken</button>' +
+        '<button type="button" class="bestand-btn" id="bestand-verschenkt">− 1<br>Verschenkt</button>' +
+        '<button type="button" class="bestand-btn plus" id="bestand-gekauft">+ 1<br>Gekauft</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="section-title">Verkostungshistorie</div>' +
+    historieHtml +
+    '<div class="view-hint">Tippe oben auf ✏️ um die Weindaten zu bearbeiten.</div>';
+
+  wireBestandButtons();
 }
 
 function renderDetailForm(){
@@ -851,8 +1097,11 @@ function renderDetailForm(){
   '</div>';
 
   const aromenHtml = '<div class="aroma-select" id="aroma-select-row">' +
-    allAromen().map(a=>
-      '<button type="button" class="aroma-tag '+((w.aromen||[]).includes(a)?'active':'')+'" data-a="'+esc(a)+'">'+esc(a)+'</button>'
+    allAromaGroups().map(g=>
+      '<div class="aroma-group-title">'+esc(g.kategorie)+'</div>' +
+      g.aromen.map(a=>
+        '<button type="button" class="aroma-tag '+((w.aromen||[]).includes(a)?'active':'')+'" data-a="'+esc(a)+'">'+esc(a)+'</button>'
+      ).join('')
     ).join('') +
     '<button type="button" class="aroma-add-btn" id="add-new-aroma-btn">+ Neu</button>' +
   '</div>';
@@ -1028,29 +1277,7 @@ function wireDetailFormEvents(){
     };
   });
 
-  document.getElementById('bestand-getrunken').onclick = ()=>{
-    syncFormToEditingWein();
-    if((w.bestand||0)<=0){ showToast('Kein Bestand mehr vorhanden.'); return; }
-    w.bestand -= 1;
-    w.historie = w.historie || [];
-    w.historie.push({datum: todayISO(), ereignis:'Getrunken'});
-    renderDetailForm();
-  };
-  document.getElementById('bestand-verschenkt').onclick = ()=>{
-    syncFormToEditingWein();
-    if((w.bestand||0)<=0){ showToast('Kein Bestand mehr vorhanden.'); return; }
-    w.bestand -= 1;
-    w.historie = w.historie || [];
-    w.historie.push({datum: todayISO(), ereignis:'Verschenkt'});
-    renderDetailForm();
-  };
-  document.getElementById('bestand-gekauft').onclick = ()=>{
-    syncFormToEditingWein();
-    w.bestand = (w.bestand||0) + 1;
-    w.historie = w.historie || [];
-    w.historie.push({datum: todayISO(), ereignis:'Gekauft'});
-    renderDetailForm();
-  };
+  wireBestandButtons();
 }
 
 /* Photo file input handling */
@@ -1091,48 +1318,18 @@ function readAndResizeImage(file){
   });
 }
 
-/* Save / Delete */
-document.getElementById('detail-save').onclick = async ()=>{
-  const w = editingWein;
-  w.name = document.getElementById('f-name').value.trim();
-  w.weingut = document.getElementById('f-weingut').value.trim();
-  w.jahrgang = document.getElementById('f-jahrgang').value.trim();
-  w.land = document.getElementById('f-land').value.trim();
-  w.region = document.getElementById('f-region').value.trim();
-  w.appellation = document.getElementById('f-appellation').value.trim();
-  w.weinart = document.getElementById('f-weinart').value;
-  w.hauptrebsorte = document.getElementById('f-hauptrebsorte').value.trim();
-  w.alkohol = document.getElementById('f-alkohol').value;
-  w.restzucker = document.getElementById('f-restzucker').value;
-  w.ausbau = document.getElementById('f-ausbau').value;
-  w.gaerung = document.getElementById('f-gaerung').value;
-  w.kaufpreis = document.getElementById('f-kaufpreis').value;
-  w.kaufdatum = document.getElementById('f-kaufdatum').value;
-  w.bemerkung = document.getElementById('f-bemerkung').value;
-  w.verkostungsdatum = document.getElementById('f-verkostungsdatum').value;
-
-  if(w.hauptrebsorte && !allRebsorten().includes(w.hauptrebsorte)){
-    customRebsorten.push(w.hauptrebsorte);
-    await metaSet('customRebsorten', customRebsorten);
-  }
-
-  if(!w.name){ showToast('Bitte einen Namen eingeben.'); return; }
-
-  const toSave = Object.assign({}, w);
-  if(editingIsNew) delete toSave.id;
-  const newId = await dbPut('weine', toSave);
-  await loadAll();
-  closeDetail();
-  renderAll();
-  showToast(editingIsNew ? 'Wein hinzugefügt.' : 'Wein gespeichert.');
-};
-
+/* Delete */
 document.getElementById('detail-delete').onclick = ()=>{
-  if(editingIsNew){ closeDetail(); return; }
+  if(editingIsNew || !editingWein.id){
+    document.getElementById('detail-page').classList.remove('active');
+    editingWein = null;
+    return;
+  }
   showConfirm('Wein löschen?', '"'+ (editingWein.name||'Dieser Wein') +'" wird endgültig gelöscht.', async ()=>{
     await dbDelete('weine', editingWein.id);
     await loadAll();
-    closeDetail();
+    document.getElementById('detail-page').classList.remove('active');
+    editingWein = null;
     renderAll();
     showToast('Wein gelöscht.');
   });
