@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vino v1.1</title>
+<title>Vino v1.3</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -65,8 +65,8 @@ button{font-family:inherit;}
 /* Pills row (weinart multiselect) */
 .pillrow{display:flex;gap:6px;padding:10px 14px 4px;flex-shrink:0;flex-wrap:nowrap;}
 .pill{flex:1 1 0;min-width:0;padding:6px 4px;border-radius:999px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text-dim);font-size:11.5px;line-height:1.15;
-  white-space:normal;overflow-wrap:break-word;text-align:center;}
+  background:var(--surface);color:var(--text-dim);font-size:11px;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
 .pill.active{background:var(--accent);border-color:var(--accent);color:#1F1E1D;font-weight:600;}
 
 /* Dropdown multiselect (Rebsorte filter) */
@@ -101,6 +101,12 @@ button{font-family:inherit;}
 .lh-sub{flex-shrink:0;text-align:right;}
 .lh-sub.wide{max-width:34%;width:34%;}
 .lh-rating{flex-shrink:0;width:70px;text-align:right;}
+.lh-sort{cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.lh-main.lh-sort{justify-content:flex-start;}
+.lh-sub.lh-sort,.lh-rating.lh-sort{justify-content:flex-end;width:100%;}
+.sort-arrow{font-size:8px;opacity:0.35;width:8px;display:inline-block;}
+.lh-sort.active .sort-arrow{opacity:1;color:var(--accent);}
+.lh-sort.active{color:var(--text);}
 .list-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
 .list-row:active{background:var(--surface);}
 .row-thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;background:var(--surface2);
@@ -228,11 +234,19 @@ button{font-family:inherit;}
 .history-empty{color:var(--text-faint);font-size:13.5px;padding:8px 0;}
 
 .detail-footer{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
-  background:var(--bg);border-top:1px solid var(--border);display:flex;gap:10px;z-index:101;}
+  background:var(--bg);border-top:1px solid var(--border);display:flex;gap:10px;z-index:101;
+  opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;}
+.detail-footer.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
 .btn{flex:1;padding:13px;border-radius:var(--radius-sm);border:none;font-size:15px;font-weight:700;}
 .btn-primary{background:var(--accent);color:#1F1E1D;}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-danger{background:none;color:var(--danger);border:1px solid var(--danger);}
+
+/* Keep read-only fields visually identical to editable ones */
+.field-input:disabled,.field-select:disabled,.field-textarea:disabled,
+button.aroma-tag:disabled{opacity:1;-webkit-text-fill-color:var(--text);color:var(--text);cursor:default;}
+.field-select:disabled{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23807E78' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");}
+button.aroma-tag:disabled.active{color:#1F1E1D;}
 
 /* Stats */
 .stats-scroll{flex:1;overflow-y:auto;padding:14px 16px 90px;-webkit-overflow-scrolling:touch;}
@@ -296,9 +310,9 @@ select.field-select{appearance:none;-webkit-appearance:none;
     <div class="list-scroll" id="weinliste-scroll">
       <div class="list-header">
         <span class="lh-thumb">Bild</span>
-        <span class="lh-main">Name</span>
-        <span class="lh-sub wide">Rebsorte</span>
-        <span class="lh-rating">Bewertung</span>
+        <span class="lh-main lh-sort" data-key="name">Name<span class="sort-arrow"></span></span>
+        <span class="lh-sub wide lh-sort" data-key="rebsorte">Rebsorte<span class="sort-arrow"></span></span>
+        <span class="lh-rating lh-sort" data-key="bewertung">Bewertung<span class="sort-arrow"></span></span>
       </div>
       <div id="weinliste-list"></div>
     </div>
@@ -320,8 +334,8 @@ select.field-select{appearance:none;-webkit-appearance:none;
     <div class="list-scroll" id="aromen-scroll">
       <div class="list-header">
         <span class="lh-thumb">Bild</span>
-        <span class="lh-main">Name</span>
-        <span class="lh-sub wide">Aromen</span>
+        <span class="lh-main lh-sort" data-key="name">Name<span class="sort-arrow"></span></span>
+        <span class="lh-sub wide lh-sort" data-key="aromen">Aromen<span class="sort-arrow"></span></span>
       </div>
       <div id="aromen-list"></div>
     </div>
@@ -332,9 +346,9 @@ select.field-select{appearance:none;-webkit-appearance:none;
     <div class="list-scroll" id="favoriten-scroll">
       <div class="list-header">
         <span class="lh-thumb">Bild</span>
-        <span class="lh-main">Name</span>
-        <span class="lh-sub wide">Weinart</span>
-        <span class="lh-rating">Rebsorte</span>
+        <span class="lh-main lh-sort" data-key="name">Name<span class="sort-arrow"></span></span>
+        <span class="lh-sub wide lh-sort" data-key="weinart">Weinart<span class="sort-arrow"></span></span>
+        <span class="lh-rating lh-sort" data-key="rebsorte">Rebsorte<span class="sort-arrow"></span></span>
       </div>
       <div id="favoriten-list"></div>
     </div>
@@ -377,7 +391,7 @@ select.field-select{appearance:none;-webkit-appearance:none;
       </button>
     </div>
     <div class="detail-scroll" id="detail-scroll"></div>
-    <div class="detail-footer">
+    <div class="detail-footer" id="detail-footer">
       <button class="btn btn-danger" id="detail-delete">Löschen</button>
     </div>
   </div>
@@ -443,7 +457,7 @@ const AROMA_KATEGORIEN = {
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
-const APP_VERSION = "v1.1";
+const APP_VERSION = "v1.3";
 const MAX_PHOTO_DIM = 900;
 
 let db = null;
@@ -601,6 +615,51 @@ function mainImage(w){
 const wlFilter = { search:'', rebsorten:new Set(), weinarten:new Set() };
 const arFilter = { search:'', aromen:new Set(), weinarten:new Set() };
 
+const wlSort = { key:'name', dir:'asc' };
+const arSort = { key:'name', dir:'asc' };
+const favSort = { key:'name', dir:'asc' };
+
+function sortWines(list, sortState){
+  const key = sortState.key, mul = sortState.dir === 'asc' ? 1 : -1;
+  return list.sort((a,b)=>{
+    if(key === 'bewertung'){
+      return ((a.bewertung||0) - (b.bewertung||0)) * mul;
+    }
+    if(key === 'aromen'){
+      const av = (a.aromen||[]).join(', '), bv = (b.aromen||[]).join(', ');
+      return av.localeCompare(bv,'de') * mul;
+    }
+    const field = (key === 'rebsorte') ? 'hauptrebsorte' : key;
+    const av = (a[field]||'').toString(), bv = (b[field]||'').toString();
+    return av.localeCompare(bv,'de') * mul;
+  });
+}
+
+function updateSortHeaderUI(containerSel, sortState){
+  document.querySelectorAll(containerSel+' .lh-sort').forEach(el=>{
+    const isActive = el.dataset.key === sortState.key;
+    el.classList.toggle('active', isActive);
+    const arrow = el.querySelector('.sort-arrow');
+    if(arrow) arrow.textContent = isActive ? (sortState.dir==='asc' ? '▲' : '▼') : '';
+  });
+}
+function wireSortHeader(containerSel, sortState, renderFn){
+  document.querySelectorAll(containerSel+' .lh-sort').forEach(el=>{
+    el.onclick = ()=>{
+      const key = el.dataset.key;
+      if(sortState.key === key){
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = (key === 'bewertung') ? 'desc' : 'asc';
+      }
+      updateSortHeaderUI(containerSel, sortState);
+      renderFn();
+    };
+  });
+  updateSortHeaderUI(containerSel, sortState);
+}
+
 function matchesRebsorte(w, set){
   if(set.size===0) return true;
   if(set.has(w.hauptrebsorte)) return true;
@@ -674,11 +733,11 @@ document.getElementById('rebsorte-filter-clear').onclick = (e)=>{
 
 function renderWeinliste(){
   const list = document.getElementById('weinliste-list');
-  const filtered = weine.filter(w=>
+  const filtered = sortWines(weine.filter(w=>
     matchesSearchWein(w, wlFilter.search) &&
     matchesRebsorte(w, wlFilter.rebsorten) &&
     matchesWeinart(w, wlFilter.weinarten)
-  ).sort((a,b)=> (a.name||'').localeCompare(b.name||'','de'));
+  ), wlSort);
 
   if(!filtered.length){
     list.innerHTML = '<div class="empty-state">Keine Weine gefunden.<br>Tippe auf + um einen Wein hinzuzufügen.</div>';
@@ -742,11 +801,11 @@ document.getElementById('aroma-filter-clear').onclick = (e)=>{
 
 function renderAromenTab(){
   const list = document.getElementById('aromen-list');
-  const filtered = weine.filter(w=>
+  const filtered = sortWines(weine.filter(w=>
     matchesSearchWein(w, arFilter.search) &&
     matchesAroma(w, arFilter.aromen) &&
     matchesWeinart(w, arFilter.weinarten)
-  ).sort((a,b)=> (a.name||'').localeCompare(b.name||'','de'));
+  ), arSort);
 
   if(!filtered.length){
     list.innerHTML = '<div class="empty-state">Keine Weine gefunden.</div>';
@@ -774,7 +833,7 @@ function renderAromenTab(){
 ============================================================ */
 function renderFavoriten(){
   const list = document.getElementById('favoriten-list');
-  const filtered = weine.filter(w=>w.favorit).sort((a,b)=> (a.name||'').localeCompare(b.name||'','de'));
+  const filtered = sortWines(weine.filter(w=>w.favorit), favSort);
   if(!filtered.length){
     list.innerHTML = '<div class="empty-state">Noch keine Favoriten markiert.<br>Öffne einen Wein und tippe auf das Herz.</div>';
     return;
@@ -916,22 +975,35 @@ function openDetail(id){
   editingWein = JSON.parse(JSON.stringify(w));
   editingIsNew = false;
   detailMode = 'view';
-  renderDetailView();
+  document.getElementById('detail-page').classList.add('active');
+  renderDetailForm();
   updateFavIcon();
   updateEditToggleIcon();
   document.getElementById('detail-title').textContent = w.name || 'Wein';
-  document.getElementById('detail-page').classList.add('active');
+  document.getElementById('detail-scroll').scrollTop = 0;
+  updateDeleteFooterVisibility();
 }
 function openNewWein(){
   editingWein = blankWein();
   editingIsNew = true;
   detailMode = 'edit';
+  document.getElementById('detail-page').classList.add('active');
   renderDetailForm();
   updateFavIcon();
   updateEditToggleIcon();
   document.getElementById('detail-title').textContent = 'Neuer Wein';
-  document.getElementById('detail-page').classList.add('active');
+  document.getElementById('detail-scroll').scrollTop = 0;
+  updateDeleteFooterVisibility();
 }
+function updateDeleteFooterVisibility(){
+  const scroll = document.getElementById('detail-scroll');
+  const footer = document.getElementById('detail-footer');
+  if(!scroll || !footer) return;
+  const nearBottom = (scroll.scrollTop + scroll.clientHeight) >= (scroll.scrollHeight - 24);
+  footer.classList.toggle('visible', nearBottom);
+}
+document.getElementById('detail-scroll').addEventListener('scroll', updateDeleteFooterVisibility);
+
 async function closeDetail(){
   if(detailMode==='edit'){
     await saveEditingWein();
@@ -990,9 +1062,10 @@ document.getElementById('detail-edit-toggle').onclick = async ()=>{
     const ok = await saveEditingWein();
     if(ok){
       detailMode = 'view';
-      renderDetailView();
+      renderDetailForm();
       updateEditToggleIcon();
       document.getElementById('detail-title').textContent = editingWein.name || 'Wein';
+      document.getElementById('detail-scroll').scrollTop = 0;
     }
   }
 };
@@ -1006,7 +1079,7 @@ function wireBestandButtons(){
     editingWein.historie = editingWein.historie || [];
     editingWein.historie.push({datum: todayISO(), ereignis:'Getrunken'});
     await quickPersist();
-    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+    renderDetailForm();
   };
   document.getElementById('bestand-verschenkt').onclick = async ()=>{
     if(detailMode==='edit') syncFormToEditingWein();
@@ -1015,7 +1088,7 @@ function wireBestandButtons(){
     editingWein.historie = editingWein.historie || [];
     editingWein.historie.push({datum: todayISO(), ereignis:'Verschenkt'});
     await quickPersist();
-    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+    renderDetailForm();
   };
   document.getElementById('bestand-gekauft').onclick = async ()=>{
     if(detailMode==='edit') syncFormToEditingWein();
@@ -1023,7 +1096,7 @@ function wireBestandButtons(){
     editingWein.historie = editingWein.historie || [];
     editingWein.historie.push({datum: todayISO(), ereignis:'Gekauft'});
     await quickPersist();
-    if(detailMode==='view') renderDetailView(); else renderDetailForm();
+    renderDetailForm();
   };
 }
 
@@ -1033,85 +1106,10 @@ function optionsHtml(list, selected){
   ).join('');
 }
 
-/* ============================================================
-   READ-ONLY VIEW MODE
-============================================================ */
-function viewRow(label, value){
-  const hasVal = value !== null && value !== undefined && String(value).trim() !== '';
-  return '<div class="view-row"><span class="view-label">'+esc(label)+'</span>'+
-    '<span class="view-value'+(hasVal?'':' empty')+'">'+(hasVal?esc(value):'–')+'</span></div>';
-}
-
-function renderDetailView(){
-  const w = editingWein;
-  updateFavIcon();
-  const scroll = document.getElementById('detail-scroll');
-
-  const galleryHtml = (w.images && w.images.length) ?
-    '<div class="gallery">' + w.images.map(img=>'<div class="gallery-item"><img src="'+img.data+'"></div>').join('') + '</div>'
-    : '';
-
-  const weitereTxt = (w.weitereRebsorten||[]).length ? (w.weitereRebsorten||[]).join(', ') : '';
-
-  const aromenHtml = (w.aromen||[]).length ?
-    '<div class="view-chips">' + (w.aromen||[]).map(a=>'<span class="view-chip">'+esc(a)+'</span>').join('') + '</div>'
-    : '<div class="view-bemerkung empty">Keine Aromen erfasst.</div>';
-
-  const historieHtml = (w.historie && w.historie.length) ?
-    '<div class="history-list">' + w.historie.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).map(h=>
-      '<div class="history-item"><span class="history-date">'+fmtDate(h.datum)+'</span><span class="history-event">'+esc(h.ereignis)+'</span></div>'
-    ).join('') + '</div>'
-    : '<div class="history-list"><div class="history-empty">Noch keine Einträge.</div></div>';
-
-  scroll.innerHTML =
-    galleryHtml +
-    '<div class="view-name">'+esc(w.name||'(ohne Namen)')+'</div>' +
-    '<div class="view-grid">' +
-      viewRow('Weingut', w.weingut) +
-      viewRow('Jahrgang', w.jahrgang) +
-      viewRow('Land', w.land) +
-      viewRow('Region', w.region) +
-      viewRow('Appellation', w.appellation) +
-      viewRow('Weinart', w.weinart) +
-      viewRow('Hauptrebsorte', w.hauptrebsorte) +
-      viewRow('Weitere Rebsorten', weitereTxt) +
-      viewRow('Alkoholgehalt', w.alkohol ? w.alkohol+' %' : '') +
-      viewRow('Restzucker', w.restzucker ? w.restzucker+' g/L' : '') +
-      viewRow('Ausbau', w.ausbau) +
-      viewRow('Gärung', w.gaerung) +
-      viewRow('Kaufpreis', w.kaufpreis ? Number(w.kaufpreis).toFixed(2)+' €' : '') +
-      viewRow('Kaufdatum', w.kaufdatum ? fmtDate(w.kaufdatum) : '') +
-      viewRow('Verkostungsdatum', w.verkostungsdatum ? fmtDate(w.verkostungsdatum) : '') +
-    '</div>' +
-
-    '<div class="section-title">Bewertung</div>' +
-    '<div class="stars-picker">' + [1,2,3,4,5].map(n=>'<span>'+starIcon(n<=(w.bewertung||0))+'</span>').join('') + '</div>' +
-
-    '<div class="section-title">Aromen</div>' +
-    aromenHtml +
-
-    '<div class="section-title">Bemerkung</div>' +
-    '<div class="view-bemerkung'+(w.bemerkung?'':' empty')+'">'+(w.bemerkung?esc(w.bemerkung):'Keine Bemerkung.')+'</div>' +
-
-    '<div class="section-title">Bestand</div>' +
-    '<div class="bestand-box">' +
-      '<div class="bestand-count" id="bestand-count">'+(w.bestand||0)+'</div>' +
-      '<div class="bestand-btns">' +
-        '<button type="button" class="bestand-btn minus" id="bestand-getrunken">− 1<br>Getrunken</button>' +
-        '<button type="button" class="bestand-btn" id="bestand-verschenkt">− 1<br>Verschenkt</button>' +
-        '<button type="button" class="bestand-btn plus" id="bestand-gekauft">+ 1<br>Gekauft</button>' +
-      '</div>' +
-    '</div>' +
-
-    '<div class="section-title">Verkostungshistorie</div>' +
-    historieHtml +
-    '<div class="view-hint">Tippe oben auf ✏️ um die Weindaten zu bearbeiten.</div>';
-
-  wireBestandButtons();
-}
-
 function renderDetailForm(){
   const w = editingWein;
+  const readOnly = (detailMode === 'view');
+  const dis = readOnly ? 'disabled' : '';
   updateFavIcon();
   const scroll = document.getElementById('detail-scroll');
 
@@ -1120,16 +1118,16 @@ function renderDetailForm(){
       '<div class="gallery-item">'+
         '<img src="'+img.data+'">'+
         '<div class="gallery-star '+(img.isMain?'is-main':'')+'" data-i="'+i+'">'+starIcon(img.isMain)+'</div>'+
-        '<div class="gallery-del" data-i="'+i+'">✕</div>'+
+        (readOnly ? '' : '<div class="gallery-del" data-i="'+i+'">✕</div>')+
       '</div>'
     ).join('') +
-    '<label class="gallery-add" id="gallery-add-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></label>' +
+    (readOnly ? '' : '<label class="gallery-add" id="gallery-add-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></label>') +
   '</div>';
 
   const rebsortenOpts = allRebsorten();
   const weitereChips = '<div class="chip-row" id="weitere-rebsorten-chips">' +
     (w.weitereRebsorten||[]).map((r,i)=>
-      '<div class="chip"><span>'+esc(r)+'</span><button data-i="'+i+'" class="chip-del-rebsorte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
+      '<div class="chip"><span>'+esc(r)+'</span>'+(readOnly ? '' : '<button data-i="'+i+'" class="chip-del-rebsorte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button>')+'</div>'
     ).join('') +
   '</div>';
 
@@ -1137,10 +1135,10 @@ function renderDetailForm(){
     allAromaGroups().map(g=>
       '<div class="aroma-group-title">'+esc(g.kategorie)+'</div>' +
       g.aromen.map(a=>
-        '<button type="button" class="aroma-tag '+((w.aromen||[]).includes(a)?'active':'')+'" data-a="'+esc(a)+'">'+esc(a)+'</button>'
+        '<button type="button" class="aroma-tag '+((w.aromen||[]).includes(a)?'active':'')+'" '+dis+' data-a="'+esc(a)+'">'+esc(a)+'</button>'
       ).join('')
     ).join('') +
-    '<button type="button" class="aroma-add-btn" id="add-new-aroma-btn">+ Neu</button>' +
+    (readOnly ? '' : '<button type="button" class="aroma-add-btn" id="add-new-aroma-btn">+ Neu</button>') +
   '</div>';
 
   const historieHtml = (w.historie && w.historie.length) ?
@@ -1149,58 +1147,63 @@ function renderDetailForm(){
     ).join('') + '</div>'
     : '<div class="history-list"><div class="history-empty">Noch keine Einträge.</div></div>';
 
+  const bewertungHtml = readOnly
+    ? '<div class="field-group"><div style="font-size:22px;font-weight:700;color:var(--text);">'+(w.bewertung ? w.bewertung+' / 5' : '–')+'</div></div>'
+    : '<div class="stars-picker" id="stars-picker">' +
+        [1,2,3,4,5].map(n=>'<span data-n="'+n+'">'+starIcon(n<=w.bewertung)+'</span>').join('') +
+      '</div>';
+
   scroll.innerHTML =
     galleryHtml +
-    '<div class="field-group"><div class="field-label">Name</div><input class="field-input" id="f-name" value="'+esc(w.name)+'" placeholder="z.B. Château Margaux 2018"></div>' +
+    '<div class="field-group"><div class="field-label">Name</div><input class="field-input" id="f-name" '+dis+' value="'+esc(w.name)+'" placeholder="z.B. Château Margaux 2018"></div>' +
 
     '<div class="field-row2">' +
-      '<div class="field-group"><div class="field-label">Weingut</div><input class="field-input" id="f-weingut" value="'+esc(w.weingut)+'"></div>' +
-      '<div class="field-group"><div class="field-label">Jahrgang</div><input class="field-input" id="f-jahrgang" type="number" value="'+esc(w.jahrgang)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Weingut</div><input class="field-input" id="f-weingut" '+dis+' value="'+esc(w.weingut)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Jahrgang</div><input class="field-input" id="f-jahrgang" '+dis+' type="number" value="'+esc(w.jahrgang)+'"></div>' +
     '</div>' +
     '<div class="field-row2">' +
-      '<div class="field-group"><div class="field-label">Land</div><input class="field-input" id="f-land" value="'+esc(w.land)+'"></div>' +
-      '<div class="field-group"><div class="field-label">Region</div><input class="field-input" id="f-region" value="'+esc(w.region)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Land</div><input class="field-input" id="f-land" '+dis+' value="'+esc(w.land)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Region</div><input class="field-input" id="f-region" '+dis+' value="'+esc(w.region)+'"></div>' +
     '</div>' +
-    '<div class="field-group"><div class="field-label">Appellation</div><input class="field-input" id="f-appellation" value="'+esc(w.appellation)+'"></div>' +
+    '<div class="field-group"><div class="field-label">Appellation</div><input class="field-input" id="f-appellation" '+dis+' value="'+esc(w.appellation)+'"></div>' +
 
-    '<div class="field-group"><div class="field-label">Weinart</div><select class="field-select" id="f-weinart">'+optionsHtml(WEINARTEN, w.weinart)+'</select></div>' +
+    '<div class="field-group"><div class="field-label">Weinart</div><select class="field-select" id="f-weinart" '+dis+'>'+optionsHtml(WEINARTEN, w.weinart)+'</select></div>' +
 
     '<div class="field-group"><div class="field-label">Hauptrebsorte</div>' +
-      '<input class="field-input" id="f-hauptrebsorte" list="rebsorten-datalist" value="'+esc(w.hauptrebsorte)+'" placeholder="Auswählen oder neu eingeben">' +
+      '<input class="field-input" id="f-hauptrebsorte" '+dis+' list="rebsorten-datalist" value="'+esc(w.hauptrebsorte)+'" placeholder="Auswählen oder neu eingeben">' +
     '</div>' +
     '<div class="field-group"><div class="field-label">Weitere Rebsorten</div>' +
-      '<div style="display:flex;gap:8px;">'+
-        '<input class="field-input" id="f-weitere-input" list="rebsorten-datalist" placeholder="Rebsorte hinzufügen" style="flex:1;">'+
-        '<button type="button" class="btn btn-secondary" id="btn-add-weitere-rebsorte" style="flex:none;padding:11px 16px;">+</button>'+
-      '</div>'+
+      (readOnly ? '' :
+        '<div style="display:flex;gap:8px;">'+
+          '<input class="field-input" id="f-weitere-input" list="rebsorten-datalist" placeholder="Rebsorte hinzufügen" style="flex:1;">'+
+          '<button type="button" class="btn btn-secondary" id="btn-add-weitere-rebsorte" style="flex:none;padding:11px 16px;">+</button>'+
+        '</div>') +
       weitereChips +
     '</div>' +
     '<datalist id="rebsorten-datalist">'+rebsortenOpts.map(r=>'<option value="'+esc(r)+'">').join('')+'</datalist>' +
 
     '<div class="field-row2">' +
-      '<div class="field-group"><div class="field-label">Alkoholgehalt %</div><input class="field-input" id="f-alkohol" type="number" step="0.1" value="'+esc(w.alkohol)+'"></div>' +
-      '<div class="field-group"><div class="field-label">Restzucker g/L</div><input class="field-input" id="f-restzucker" type="number" step="0.1" value="'+esc(w.restzucker)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Alkoholgehalt %</div><input class="field-input" id="f-alkohol" '+dis+' type="number" step="0.1" value="'+esc(w.alkohol)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Restzucker g/L</div><input class="field-input" id="f-restzucker" '+dis+' type="number" step="0.1" value="'+esc(w.restzucker)+'"></div>' +
     '</div>' +
-    '<div class="field-group"><div class="field-label">Ausbau</div><select class="field-select" id="f-ausbau">'+optionsHtml(AUSBAU_OPTIONEN, w.ausbau)+'</select></div>' +
-    '<div class="field-group"><div class="field-label">Gärung</div><select class="field-select" id="f-gaerung">'+optionsHtml(GAERUNG_OPTIONEN, w.gaerung)+'</select></div>' +
+    '<div class="field-group"><div class="field-label">Ausbau</div><select class="field-select" id="f-ausbau" '+dis+'>'+optionsHtml(AUSBAU_OPTIONEN, w.ausbau)+'</select></div>' +
+    '<div class="field-group"><div class="field-label">Gärung</div><select class="field-select" id="f-gaerung" '+dis+'>'+optionsHtml(GAERUNG_OPTIONEN, w.gaerung)+'</select></div>' +
 
     '<div class="field-row2">' +
-      '<div class="field-group"><div class="field-label">Kaufpreis (€)</div><input class="field-input" id="f-kaufpreis" type="number" step="0.01" value="'+esc(w.kaufpreis)+'"></div>' +
-      '<div class="field-group"><div class="field-label">Kaufdatum</div><input class="field-input" id="f-kaufdatum" type="date" value="'+esc(w.kaufdatum)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Kaufpreis (€)</div><input class="field-input" id="f-kaufpreis" '+dis+' type="number" step="0.01" value="'+esc(w.kaufpreis)+'"></div>' +
+      '<div class="field-group"><div class="field-label">Kaufdatum</div><input class="field-input" id="f-kaufdatum" '+dis+' type="date" value="'+esc(w.kaufdatum)+'"></div>' +
     '</div>' +
 
     '<div class="section-title">Bewertung</div>' +
-    '<div class="stars-picker" id="stars-picker">' +
-      [1,2,3,4,5].map(n=>'<span data-n="'+n+'">'+starIcon(n<=w.bewertung)+'</span>').join('') +
-    '</div>' +
+    bewertungHtml +
 
     '<div class="section-title">Aromen</div>' +
     aromenHtml +
 
     '<div class="section-title">Bemerkung</div>' +
-    '<div class="field-group"><textarea class="field-textarea" id="f-bemerkung" placeholder="Geschmacksbeschreibung…">'+esc(w.bemerkung)+'</textarea></div>' +
+    '<div class="field-group"><textarea class="field-textarea" id="f-bemerkung" '+dis+' placeholder="Geschmacksbeschreibung…">'+esc(w.bemerkung)+'</textarea></div>' +
 
-    '<div class="field-group"><div class="field-label">Verkostungsdatum</div><input class="field-input" id="f-verkostungsdatum" type="date" value="'+esc(w.verkostungsdatum)+'"></div>' +
+    '<div class="field-group"><div class="field-label">Verkostungsdatum</div><input class="field-input" id="f-verkostungsdatum" '+dis+' type="date" value="'+esc(w.verkostungsdatum)+'"></div>' +
 
     '<div class="section-title">Bestand</div>' +
     '<div class="bestand-box">' +
@@ -1216,6 +1219,7 @@ function renderDetailForm(){
     historieHtml;
 
   wireDetailFormEvents();
+  updateDeleteFooterVisibility();
 }
 
 function syncFormToEditingWein(){
@@ -1242,10 +1246,13 @@ function syncFormToEditingWein(){
 
 function wireDetailFormEvents(){
   const w = editingWein;
+  const readOnly = (detailMode === 'view');
 
-  document.getElementById('gallery-add-btn').onclick = ()=> document.getElementById('file-photo').click();
+  const galleryAddBtn = document.getElementById('gallery-add-btn');
+  if(galleryAddBtn) galleryAddBtn.onclick = ()=> document.getElementById('file-photo').click();
 
   document.querySelectorAll('.gallery-star').forEach(el=>{
+    if(readOnly) return;
     el.onclick = ()=>{
       syncFormToEditingWein();
       const i = Number(el.dataset.i);
@@ -1264,7 +1271,8 @@ function wireDetailFormEvents(){
     };
   });
 
-  document.getElementById('btn-add-weitere-rebsorte').onclick = ()=>{
+  const addWeitereBtn = document.getElementById('btn-add-weitere-rebsorte');
+  if(addWeitereBtn) addWeitereBtn.onclick = ()=>{
     syncFormToEditingWein();
     const inp = document.getElementById('f-weitere-input');
     const val = inp.value.trim();
@@ -1293,7 +1301,8 @@ function wireDetailFormEvents(){
       renderDetailForm();
     };
   });
-  document.getElementById('add-new-aroma-btn').onclick = ()=>{
+  const addAromaBtn = document.getElementById('add-new-aroma-btn');
+  if(addAromaBtn) addAromaBtn.onclick = ()=>{
     const name = prompt('Neues Aroma:');
     if(!name) return;
     const trimmed = name.trim();
@@ -1543,6 +1552,9 @@ async function init(){
   renderWeinartPillrow(document.getElementById('aromen-weinart-pillrow'), arFilter.weinarten, renderAromenTab);
   renderRebsorteDropdown();
   renderAromaDropdown();
+  wireSortHeader('#page-weinliste', wlSort, renderWeinliste);
+  wireSortHeader('#page-aromen', arSort, renderAromenTab);
+  wireSortHeader('#page-favoriten', favSort, renderFavoriten);
   renderAll();
 }
 init();
