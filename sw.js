@@ -1,4 +1,4 @@
-const CACHE_NAME = "vino-v1.9";
+const CACHE_NAME = "vino-v2.0";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {

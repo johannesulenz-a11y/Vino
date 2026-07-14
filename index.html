@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vino v1.9</title>
+<title>Vino v2.0</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -161,6 +161,34 @@ button{font-family:inherit;}
 .gallery-add{flex-shrink:0;width:100px;height:100px;border-radius:10px;border:1.5px dashed var(--border);
   display:flex;align-items:center;justify-content:center;color:var(--text-faint);}
 .gallery-add svg{width:26px;height:26px;}
+
+/* Swipeable photo carousel (Teadrunk-style) */
+.photo-gallery{position:relative;width:100%;aspect-ratio:1/1;background:var(--surface);
+  overflow:hidden;touch-action:pan-y;}
+.photo-track{display:flex;height:100%;transition:transform .28s cubic-bezier(.22,.61,.36,1);}
+.photo-slide{flex:none;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.photo-slide img{width:100%;height:100%;object-fit:cover;}
+.photo-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;color:var(--text-faint);gap:8px;}
+.photo-empty span{font-size:13px;}
+.photo-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
+.photo-dot{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,0.45);transition:width .15s;}
+.photo-dot.active{background:#fff;width:16px;border-radius:4px;}
+.photo-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:999px;
+  background:rgba(0,0,0,0.55);border:none;display:flex;align-items:center;justify-content:center;color:#fff;}
+.photo-arrow.left{left:10px;}
+.photo-arrow.right{right:10px;}
+.photo-arrow svg{width:16px;height:16px;}
+.photo-add-btn{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:999px;
+  background:rgba(0,0,0,0.55);border:none;display:flex;align-items:center;justify-content:center;color:#fff;}
+.photo-add-btn svg{width:17px;height:17px;}
+.photo-del-btn{position:absolute;top:10px;left:10px;width:36px;height:36px;border-radius:999px;
+  background:rgba(193,91,74,0.85);border:none;display:flex;align-items:center;justify-content:center;color:#fff;}
+.photo-del-btn svg{width:16px;height:16px;}
+.photo-star-btn{position:absolute;bottom:10px;right:10px;width:34px;height:34px;border-radius:999px;
+  background:rgba(0,0,0,0.55);border:none;display:flex;align-items:center;justify-content:center;color:#fff;}
+.photo-star-btn svg{width:17px;height:17px;}
+.photo-star-btn.is-main{background:var(--star);color:#1F1E1D;}
 
 .field-group{padding:0 16px;margin-bottom:14px;}
 .field-label{font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:5px;
@@ -459,7 +487,7 @@ const AROMA_KATEGORIEN = {
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
-const APP_VERSION = "v1.9";
+const APP_VERSION = "v2.0";
 const MAX_PHOTO_DIM = 900;
 
 let db = null;
@@ -959,6 +987,7 @@ function renderAll(){
 let editingWein = null; // working copy
 let editingIsNew = false;
 let detailMode = 'view'; // 'view' | 'edit'
+let currentPhotoSlide = 0; // index of currently shown photo in the swipeable gallery
 
 function blankWein(){
   return {
@@ -980,6 +1009,7 @@ function openDetail(id){
   const w = weine.find(x=>x.id===id);
   editingWein = JSON.parse(JSON.stringify(w));
   editingIsNew = false;
+  currentPhotoSlide = Math.max(0, (editingWein.images||[]).findIndex(p=>p.isMain));
   detailMode = 'view';
   document.getElementById('detail-page').classList.add('active');
   renderDetailForm();
@@ -993,6 +1023,7 @@ function openDetail(id){
 function openNewWein(){
   editingWein = blankWein();
   editingIsNew = true;
+  currentPhotoSlide = 0;
   detailMode = 'edit';
   document.getElementById('detail-page').classList.add('active');
   renderDetailForm();
@@ -1128,16 +1159,27 @@ function renderDetailForm(){
   updateFavIcon();
   const scroll = document.getElementById('detail-scroll');
 
-  const galleryHtml = '<div class="gallery" id="gallery-row">' +
-    (w.images||[]).map((img,i)=>
-      '<div class="gallery-item">'+
-        '<img src="'+img.data+'">'+
-        '<div class="gallery-star '+(img.isMain?'is-main':'')+'" data-i="'+i+'">'+starIcon(img.isMain)+'</div>'+
-        (readOnly ? '' : '<div class="gallery-del" data-i="'+i+'">✕</div>')+
-      '</div>'
-    ).join('') +
-    (readOnly ? '' : '<label class="gallery-add" id="gallery-add-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></label>') +
-  '</div>';
+  const photos = w.images || [];
+  if(currentPhotoSlide > photos.length-1) currentPhotoSlide = Math.max(0, photos.length-1);
+  const mainIdx = photos.findIndex(p=>p.isMain);
+
+  const galleryHtml =
+    '<div class="photo-gallery" id="photo-gallery">' +
+      '<div class="photo-track" id="photo-track">' +
+        photos.map(img=>'<div class="photo-slide"><img src="'+img.data+'"></div>').join('') +
+      '</div>' +
+      (photos.length===0 ?
+        '<div class="photo-empty" id="photo-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Noch keine Fotos</span></div>'
+        : '') +
+      '<button class="photo-arrow left" id="photo-prev" style="display:'+(photos.length>1?'flex':'none')+';"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+      '<button class="photo-arrow right" id="photo-next" style="display:'+(photos.length>1?'flex':'none')+';"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg></button>' +
+      (readOnly ? '' : '<button class="photo-add-btn" id="photo-add-btn" title="Foto hinzufügen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>') +
+      (!readOnly && photos.length>0 ? '<button class="photo-del-btn" id="photo-del-btn" title="Foto löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>' : '') +
+      (!readOnly && photos.length>0 ? '<button class="photo-star-btn '+(currentPhotoSlide===mainIdx?'is-main':'')+'" id="photo-star-btn" title="Als Hauptbild"><svg viewBox="0 0 24 24" fill="'+(currentPhotoSlide===mainIdx?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.1 6.6 7.2.9-5.4 5 1.5 7.2L12 18l-6.4 3.7 1.5-7.2-5.4-5 7.2-.9z"/></svg></button>' : '') +
+      '<div class="photo-dots" id="photo-dots">' +
+        photos.map((img,i)=>'<div class="photo-dot '+(i===currentPhotoSlide?'active':'')+'"></div>').join('') +
+      '</div>' +
+    '</div>';
 
   const rebsortenOpts = allRebsorten();
   const weitereChips = '<div class="chip-row" id="weitere-rebsorten-chips">' +
@@ -1237,6 +1279,98 @@ function renderDetailForm(){
   updateDeleteFooterVisibility();
 }
 
+/* ============================================================
+   SWIPEABLE PHOTO CAROUSEL (Teadrunk-style)
+============================================================ */
+function goToPhotoSlide(index, smooth){
+  const photos = (editingWein && editingWein.images) || [];
+  if(!photos.length) return;
+  currentPhotoSlide = Math.max(0, Math.min(index, photos.length-1));
+  const track = document.getElementById('photo-track');
+  if(!track) return;
+  track.style.transition = smooth ? '' : 'none';
+  track.style.transform = 'translateX(-'+(currentPhotoSlide*100)+'%)';
+  document.querySelectorAll('.photo-dot').forEach((d,i)=> d.classList.toggle('active', i===currentPhotoSlide));
+  const mainIdx = photos.findIndex(p=>p.isMain);
+  const starBtn = document.getElementById('photo-star-btn');
+  if(starBtn){
+    const isMain = currentPhotoSlide===mainIdx;
+    starBtn.classList.toggle('is-main', isMain);
+    const svg = starBtn.querySelector('svg');
+    if(svg) svg.setAttribute('fill', isMain ? 'currentColor' : 'none');
+  }
+}
+
+function wirePhotoGallery(readOnly){
+  const gallery = document.getElementById('photo-gallery');
+  if(!gallery) return;
+  const photos = (editingWein && editingWein.images) || [];
+
+  const prevBtn = document.getElementById('photo-prev');
+  const nextBtn = document.getElementById('photo-next');
+  if(prevBtn) prevBtn.onclick = ()=> goToPhotoSlide(currentPhotoSlide-1, true);
+  if(nextBtn) nextBtn.onclick = ()=> goToPhotoSlide(currentPhotoSlide+1, true);
+
+  const addBtn = document.getElementById('photo-add-btn');
+  if(addBtn) addBtn.onclick = ()=> document.getElementById('file-photo').click();
+
+  const delBtn = document.getElementById('photo-del-btn');
+  if(delBtn) delBtn.onclick = ()=>{
+    syncFormToEditingWein();
+    const imgs = editingWein.images||[];
+    if(!imgs.length) return;
+    const wasMain = imgs[currentPhotoSlide].isMain;
+    imgs.splice(currentPhotoSlide,1);
+    if(wasMain && imgs.length) imgs[0].isMain = true;
+    if(currentPhotoSlide > imgs.length-1) currentPhotoSlide = Math.max(0, imgs.length-1);
+    renderDetailForm();
+  };
+
+  const starBtn = document.getElementById('photo-star-btn');
+  if(starBtn) starBtn.onclick = ()=>{
+    syncFormToEditingWein();
+    const imgs = editingWein.images||[];
+    imgs.forEach((p,i)=> p.isMain = (i===currentPhotoSlide));
+    renderDetailForm();
+  };
+
+  // Touch swipe between images
+  let touchStartX=0, touchDeltaX=0, isSwiping=false;
+  gallery.ontouchstart = (e)=>{
+    if(photos.length<2) return;
+    touchStartX = e.touches[0].clientX;
+    isSwiping = true;
+    const track = document.getElementById('photo-track');
+    if(track) track.style.transition = 'none';
+  };
+  gallery.ontouchmove = (e)=>{
+    if(!isSwiping) return;
+    touchDeltaX = e.touches[0].clientX - touchStartX;
+    const track = document.getElementById('photo-track');
+    if(!track) return;
+    const base = -currentPhotoSlide*100;
+    const pct = (touchDeltaX / gallery.clientWidth) * 100;
+    track.style.transform = 'translateX('+(base+pct)+'%)';
+  };
+  gallery.ontouchend = ()=>{
+    if(!isSwiping) return;
+    isSwiping = false;
+    const track = document.getElementById('photo-track');
+    if(track) track.style.transition = '';
+    const threshold = gallery.clientWidth * 0.18;
+    if(touchDeltaX < -threshold && currentPhotoSlide < photos.length-1){
+      goToPhotoSlide(currentPhotoSlide+1, true);
+    } else if(touchDeltaX > threshold && currentPhotoSlide > 0){
+      goToPhotoSlide(currentPhotoSlide-1, true);
+    } else {
+      goToPhotoSlide(currentPhotoSlide, true);
+    }
+    touchDeltaX = 0;
+  };
+
+  goToPhotoSlide(currentPhotoSlide, false);
+}
+
 function syncFormToEditingWein(){
   const w = editingWein;
   if(!w) return;
@@ -1263,28 +1397,7 @@ function wireDetailFormEvents(){
   const w = editingWein;
   const readOnly = (detailMode === 'view');
 
-  const galleryAddBtn = document.getElementById('gallery-add-btn');
-  if(galleryAddBtn) galleryAddBtn.onclick = ()=> document.getElementById('file-photo').click();
-
-  document.querySelectorAll('.gallery-star').forEach(el=>{
-    if(readOnly) return;
-    el.onclick = ()=>{
-      syncFormToEditingWein();
-      const i = Number(el.dataset.i);
-      w.images.forEach((img,idx)=> img.isMain = (idx===i));
-      renderDetailForm();
-    };
-  });
-  document.querySelectorAll('.gallery-del').forEach(el=>{
-    el.onclick = ()=>{
-      syncFormToEditingWein();
-      const i = Number(el.dataset.i);
-      const wasMain = w.images[i].isMain;
-      w.images.splice(i,1);
-      if(wasMain && w.images.length) w.images[0].isMain = true;
-      renderDetailForm();
-    };
-  });
+  wirePhotoGallery(readOnly);
 
   const addWeitereBtn = document.getElementById('btn-add-weitere-rebsorte');
   if(addWeitereBtn) addWeitereBtn.onclick = ()=>{
@@ -1351,6 +1464,7 @@ document.getElementById('file-photo').addEventListener('change', async (e)=>{
     const isFirst = editingWein.images.length===0;
     editingWein.images.push({data:dataUrl, isMain:isFirst});
   }
+  currentPhotoSlide = Math.max(0, editingWein.images.length-1);
   e.target.value = '';
   renderDetailForm();
 });
