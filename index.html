@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vino v2.1</title>
+<title>Vino v2.5</title>
+<script src="capacitor.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -101,10 +102,8 @@ button{font-family:inherit;}
 .lh-sub{flex-shrink:0;text-align:right;}
 .lh-sub.wide{max-width:34%;width:34%;}
 .lh-rating{flex-shrink:0;width:84px;text-align:right;}
-.lh-sort{cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
-.lh-main.lh-sort{justify-content:flex-start;}
-.lh-sub.lh-sort,.lh-rating.lh-sort{justify-content:flex-end;}
-.sort-arrow{font-size:8px;opacity:0.35;width:8px;display:inline-block;}
+.lh-sort{cursor:pointer;}
+.sort-arrow{font-size:8px;opacity:0.35;display:inline-block;width:8px;margin-left:3px;}
 .lh-sort.active .sort-arrow{opacity:1;color:var(--accent);}
 .lh-sort.active{color:var(--text);}
 .list-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
@@ -490,7 +489,7 @@ const AROMA_KATEGORIEN = {
 
 const DB_NAME = "vino_db";
 const DB_VERSION = 1;
-const APP_VERSION = "v2.1";
+const APP_VERSION = "v2.5";
 const MAX_PHOTO_DIM = 900;
 
 let db = null;
@@ -1605,11 +1604,30 @@ function restoreConfirmActions(){
   document.getElementById('confirm-ok').onclick = ()=>{ const cb=confirmCb; hideConfirm(); if(cb) cb(); };
 }
 
+/* Capacitor detection: in a Capacitor-wrapped APK, window.Capacitor is injected natively.
+   In a normal browser/PWA context it's simply absent, so everything falls back to the
+   regular Blob-download path unchanged. */
+function isCapacitor(){
+  return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+
 function exportJSON(){
   const payload = { app:'Vino', version:APP_VERSION, exportedAt:new Date().toISOString(),
     weine, customAromen, customRebsorten };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-  downloadBlob(blob, 'vino_daten_'+todayISO()+'.json');
+  const json = JSON.stringify(payload, null, 2);
+  const filename = 'vino_daten_'+todayISO()+'.json';
+  if(isCapacitor()){
+    window.Capacitor.Plugins.Filesystem.writeFile({
+      path: filename, data: json, directory: 'DOCUMENTS', encoding: 'utf8', recursive: true
+    }).then(()=>{
+      showToast('✓ Exportiert nach: Dokumente/'+filename);
+    }).catch(err=>{
+      showToast('Fehler beim Export: '+(err && err.message ? err.message : err));
+    });
+    return;
+  }
+  const blob = new Blob([json], {type:'application/json'});
+  downloadBlob(blob, filename);
   showToast('JSON exportiert.');
 }
 
@@ -1626,9 +1644,22 @@ function exportExcel(){
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Weine');
+  const filename = 'vino_daten_'+todayISO()+'.xlsx';
+
+  if(isCapacitor()){
+    const out = XLSX.write(wb, {bookType:'xlsx', type:'base64'});
+    window.Capacitor.Plugins.Filesystem.writeFile({
+      path: filename, data: out, directory: 'DOCUMENTS', recursive: true
+    }).then(()=>{
+      showToast('✓ Exportiert nach: Dokumente/'+filename);
+    }).catch(err=>{
+      showToast('Fehler beim Export: '+(err && err.message ? err.message : err));
+    });
+    return;
+  }
   const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
   const blob = new Blob([out], {type:'application/octet-stream'});
-  downloadBlob(blob, 'vino_daten_'+todayISO()+'.xlsx');
+  downloadBlob(blob, filename);
   showToast('Excel exportiert.');
 }
 
